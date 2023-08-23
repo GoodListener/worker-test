@@ -1,3 +1,4 @@
+import './App.css'
 import {useEffect, useState} from "react";
 
 function isPrime(num: number) {
@@ -18,33 +19,53 @@ function isPrime(num: number) {
   }
   return arr.filter(el => el).length //filter로 arr중 값이 true인 것의 개수를 구한다.
 }
+
+const BIG_NUMBER = 50000000
 function App() {
   const worker = new Worker('/workers/worker1.js')
   const [count, setCount] = useState(1)
-  const [primeNumberCount, setPrimeNumberCount] = useState(0)
+  const [workerCount, setWorkerCount] = useState(0)
 
   const runWorker = () => {
     worker.postMessage({ type: 'run' })
+    setInterval(() => {
+      setWorkerCount(workerCount => workerCount + 1)
+    }, 100)
   }
 
   useEffect(() => {
-    runWorker()
     worker.onmessage = (message) => {
-      const { number, isPrime } = message.data
+      const { number } = message.data
       setCount(number)
-      setPrimeNumberCount(isPrime)
     }
   }, [])
 
   const blockMainThread = () => {
-    console.log(isPrime(50000000))
+    console.log('start')
+    console.log(isPrime(BIG_NUMBER))
+    console.log('end')
   }
 
   const unblockMainThread = () => {
-    worker.postMessage({ type: 'calculate', data: 50000000 })
+    console.log('start')
+    worker.postMessage({ type: 'calculate', data: BIG_NUMBER })
     worker.onmessage = (message) => {
       console.log(message.data)
     }
+    console.log('end')
+  }
+
+  const avoidMainThread = () => {
+    console.log('start')
+    setTimeout(() => {
+      console.log(isPrime(BIG_NUMBER))
+    }, 0)
+    console.log('end')
+  }
+
+  const getSoundSource = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    console.log(stream)
   }
 
   return (
@@ -56,10 +77,15 @@ function App() {
         count: { count }
       </div>
       <div>
-        primeNumberCount: {primeNumberCount}
+        workerCount: {workerCount}
       </div>
-      <button onClick={blockMainThread}>blockMainThread</button>
-      <button onClick={unblockMainThread}>unblockMainThread</button>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <button onClick={runWorker}>runWorker</button>
+        <button onClick={blockMainThread}>blockMainThread</button>
+        <button onClick={unblockMainThread}>unblockMainThread</button>
+        <button onClick={avoidMainThread}>avoidMainThread</button>
+        <button onClick={getSoundSource}>getSoundSource</button>
+      </div>
     </>
   )
 }

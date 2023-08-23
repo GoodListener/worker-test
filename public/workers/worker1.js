@@ -24,7 +24,7 @@ onmessage = (message) => {
   if (type === 'run') {
     setInterval(() => {
       count++
-      postMessage({ number: count, isPrime: isPrime(count)})
+      postMessage({ number: count })
     }, 100)
   } else if (type === 'calculate') {
     postMessage(isPrime(data))
